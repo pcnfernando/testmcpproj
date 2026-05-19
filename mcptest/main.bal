@@ -2,7 +2,7 @@
 import ballerina/mcp;
 import ballerina/io;
 
-configurable abc = ?;
+configurable string abc = ?;
 
 listener mcp:Listener mcpListener = new (9090);
 
