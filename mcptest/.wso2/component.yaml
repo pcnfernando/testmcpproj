@@ -18,6 +18,7 @@ endpoints:
     # +required Type of traffic that the endpoint is accepting.
     # Allowed values: REST, GraphQL, GRPC, TCP, UDP.
     type: REST
+    schemaFilePath: openapi.json
     # +optional Network level visibilities of the endpoint.
     # Accepted values: Project|Organization|Public(Default).
     networkVisibilities:
