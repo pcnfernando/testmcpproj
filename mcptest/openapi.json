@@ -1,0 +1,169 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Adjudication Agent",
+    "description": "Applies benefit rules to validated claims — checks coverage, compares billed vs allowed amount, enforces prior authorisation, and routes to APPROVED, REJECTED, or PENDING_REVIEW.",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:9091",
+      "description": "Local development"
+    }
+  ],
+  "paths": {
+    "/adjudicationAgent/adjudicate": {
+      "post": {
+        "summary": "Adjudicate a validated claim",
+        "operationId": "adjudicate",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjudicationRequest"
+              },
+              "example": {
+                "claimId": "CLM-A001",
+                "memberId": "M-1001",
+                "planId": "PLAN-GOLD",
+                "procedureCode": "99213",
+                "billedAmount": 130.0
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK — adjudication result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdjudicationResult"
+                },
+                "example": {
+                  "claimId": "CLM-A001",
+                  "status": "APPROVED",
+                  "allowedAmount": 150.0,
+                  "rationale": "Procedure 99213 is covered under PLAN-GOLD with an allowed amount of $150. Billed $130 is within limit. No prior authorisation required."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — malformed payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorPayload"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorPayload"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AdjudicationRequest": {
+        "type": "object",
+        "required": ["claimId", "memberId", "planId", "procedureCode", "billedAmount"],
+        "properties": {
+          "claimId": {
+            "type": "string",
+            "description": "Identifier of the validated claim to adjudicate."
+          },
+          "memberId": {
+            "type": "string",
+            "description": "Identifier of the member the claim belongs to."
+          },
+          "planId": {
+            "type": "string",
+            "description": "Benefit plan the member is enrolled in."
+          },
+          "procedureCode": {
+            "type": "string",
+            "description": "Procedure/service code being claimed (e.g. CPT 99213)."
+          },
+          "billedAmount": {
+            "type": "number",
+            "format": "double",
+            "description": "Amount billed for the procedure."
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdjudicationResult": {
+        "type": "object",
+        "required": ["claimId", "status", "rationale"],
+        "properties": {
+          "claimId": {
+            "type": "string",
+            "description": "Identifier of the adjudicated claim."
+          },
+          "status": {
+            "$ref": "#/components/schemas/AdjudicationStatus"
+          },
+          "rationale": {
+            "type": "string",
+            "description": "Human-readable explanation of the adjudication decision."
+          },
+          "allowedAmount": {
+            "type": "number",
+            "format": "double",
+            "description": "Allowed amount under the plan, when applicable."
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdjudicationStatus": {
+        "type": "string",
+        "description": "Outcome of the adjudication.",
+        "enum": ["APPROVED", "REJECTED", "PENDING_REVIEW"]
+      },
+      "ErrorPayload": {
+        "type": "object",
+        "required": ["timestamp", "status", "reason", "message", "path", "method"],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "description": "Time when the error occurred."
+          },
+          "status": {
+            "type": "integer",
+            "format": "int64",
+            "description": "HTTP status code associated with the error."
+          },
+          "reason": {
+            "type": "string",
+            "description": "Short reason for the error."
+          },
+          "message": {
+            "type": "string",
+            "description": "Detailed message describing the error."
+          },
+          "path": {
+            "type": "string",
+            "description": "Request path where the error occurred."
+          },
+          "method": {
+            "type": "string",
+            "description": "HTTP method used for the request."
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
